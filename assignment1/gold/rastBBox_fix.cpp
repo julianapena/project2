@@ -8,39 +8,39 @@
 
 
 void rastBBox_vec_fix( vector< u_Poly< long , ushort > >& polys,
-		      zbuff& z )
+						zbuff& z )
 {
-  int i;
-  int l = polys.size();
-  u_Poly< long , ushort > poly ;
-  long screen_h, screen_w;
+	int i;
+	int l = polys.size();
+	u_Poly< long , ushort > poly ;
+	long screen_h, screen_w;
 
-  int r_shift = 10;
-  int r_val = 1024;
+	int r_shift = 10;
+	int r_val = 1024;
 
-  screen_w = z.w * 1024;
-  screen_h = z.h * 1024;
-  
-  for( i = 0 ; i < l ; i ++ ) {
-    poly = polys[i];
-    rastBBox_uPoly_fix( poly , z, screen_w, screen_h, 
+	screen_w = z.w * 1024;
+	screen_h = z.h * 1024;
+
+	for( i = 0 ; i < l ; i ++ ) {
+		poly = polys[i];
+		rastBBox_uPoly_fix( poly , z, screen_w, screen_h, 
 			z.ss_i, z.ss_w_lg2 , r_shift , r_val);
-  }
+	}
 
 }
 
 void rastBBox_uPoly_fix( u_Poly< long , ushort >& poly,
-				zbuff& z, 
-				long screen_w, 
-				long screen_h,
-				long si, //sample interval 
-				int  si_lg2, //log2 of sample interval
-				long r_shift, 
-				long r_val )
+						zbuff& z, 
+						long screen_w, 
+						long screen_h,
+						long si, //sample interval 
+						int  si_lg2, //log2 of sample interval
+						long r_shift, 
+						long r_val )
 {
 
   //Calculate BBox
-  
+
   bool valid ; // is u_poly valid based on bbox
 
   long ll_x, ll_y, ur_x, ur_y ;
@@ -51,49 +51,49 @@ void rastBBox_uPoly_fix( u_Poly< long , ushort >& poly,
   fragment f ;
 
   rastBBox_bbox_fix( poly, ll_x, ll_y, ur_x, ur_y, 
-		     z.ss_w_lg2, screen_w, screen_h, 
-		     valid, r_shift, r_val  );
+  	z.ss_w_lg2, screen_w, screen_h, 
+  	valid, r_shift, r_val  );
 
   //Iterate over Samples, Test if In uPoly
   for( s_x = ll_x ; s_x <= ur_x ; s_x += si ){
-    for( s_y = ll_y ; s_y <= ur_y ; s_y += si ){
- 
-      rastBBox_jhash_jit_fix( s_x, s_y, z.ss_w_lg2, &j_x, &j_y);
-      j_x = j_x << 2;
-      j_y = j_y << 2;
-      vert = rastBBox_stest_fix( poly , s_x + j_x , s_y + j_y );
- 
-      if( vert != -1 ){
-	x =  s_x >> r_shift;
-	y =  s_y >> r_shift;
-	ss_x = (s_x - (x << r_shift)) / si;
-	ss_y = (s_y - (y << r_shift)) / si;	
-	f.z = poly.v[vert].x[2];
-	f.c[0] = poly.v[vert].c[0];
-	f.c[1] = poly.v[vert].c[1];
-	f.c[2] = poly.v[vert].c[2];
-	f.c[3] = poly.v[vert].c[3];
-	z.process_Fragment( x , y , ss_x , ss_y ,  
-			    f.z , f.c[0] , f.c[1] , 
-			    f.c[2] , f.c[3] );
-      }
-    }
+  	for( s_y = ll_y ; s_y <= ur_y ; s_y += si ){
+
+  		rastBBox_jhash_jit_fix( s_x, s_y, z.ss_w_lg2, &j_x, &j_y);
+  		j_x = j_x << 2;
+  		j_y = j_y << 2;
+  		vert = rastBBox_stest_fix( poly , s_x + j_x , s_y + j_y );
+
+  		if( vert != -1 ){
+  			x =  s_x >> r_shift;
+  			y =  s_y >> r_shift;
+  			ss_x = (s_x - (x << r_shift)) / si;
+  			ss_y = (s_y - (y << r_shift)) / si;	
+  			f.z = poly.v[vert].x[2];
+  			f.c[0] = poly.v[vert].c[0];
+  			f.c[1] = poly.v[vert].c[1];
+  			f.c[2] = poly.v[vert].c[2];
+  			f.c[3] = poly.v[vert].c[3];
+  			z.process_Fragment( x , y , ss_x , ss_y ,  
+  								f.z , f.c[0] , f.c[1] , 
+  								f.c[2] , f.c[3] );
+  		}
+  	}
   }
 
 
 }
 
 void rastBBox_bbox_fix( u_Poly< long , ushort >& poly , 
-			       long& ll_x,
-			       long& ll_y,
-			       long& ur_x,
-			       long& ur_y,
-			       int&  ss_w_lg2, //log2 of subsample width
-			       long& screen_w,
-			       long& screen_h,
-			       bool& valid ,
-			       long r_shift, 
-			       long r_val )
+						long& ll_x,
+						long& ll_y,
+						long& ur_x,
+						long& ur_y,
+			       		int&  ss_w_lg2, //log2 of subsample width
+			       		long& screen_w,
+			       		long& screen_h,
+			       		bool& valid ,
+			       		long r_shift, 
+			       		long r_val )
 {
 
   /*
@@ -151,23 +151,23 @@ void rastBBox_bbox_fix( u_Poly< long , ushort >& poly ,
   /   a quad or triangle can be determined by examing poly.vertices
   */
 
-  ur_x = 0 ;
-  ur_y = 0 ;
-  ll_x = 0 ;
-  ll_y = 0 ;
+	ur_x = 0 ;
+	ur_y = 0 ;
+	ll_x = 0 ;
+	ll_y = 0 ;
 
   /////
   ///// Bounding Box Function Goes Here
   ///// 
-  
+
   ///// PLACE YOUR CODE HERE
 
 
-  
-  
-  
-  
-  
+
+
+
+
+
 
   /////
   ///// Bounding Box Function Goes Here
@@ -179,7 +179,7 @@ void rastBBox_bbox_fix( u_Poly< long , ushort >& poly ,
 
 
 int rastBBox_stest_fix( u_Poly< long , ushort >& poly, 
-			long s_x , long s_y )
+	long s_x , long s_y )
 { 
   // This function determines whether the sample coordinates s_x and s_y 
   //  lie inside the micropolygon poly. Note that u_poly is specified in
@@ -205,98 +205,99 @@ int rastBBox_stest_fix( u_Poly< long , ushort >& poly,
   /
   */
 
-
-
   int result = 0 ; // Default to miss state
+  //Shift Vertices such that sample is origin.
+  //If this is a rectalge, then there is a fourth vertex. I wonder too about
+  //the z dimension. There's only s_x and s_y, so the z dimension must not be 
+  //importat.
+  long v0_x = poly->v[0].x[0] - s_x;
+  long v0_y = poly->v[0].x[1] - s_y;
+  long v1_x = poly->v[1].x[0] - s_x;
+  long v1_y = poly->v[1].x[1] - s_y;
+  long v2_x = poly->v[2].x[0] - s_x;
+  long v2_y = poly->v[2].x[1] - s_y;
 
-  /////
-  ///// Sample Test Function Goes Here
-  /////
+  //Distance of origin shifted edge
+  long dist0 = v0_x*v1_y - v1_x*v0_y;//0-1 edge
+  long dist1 = v1_x*v2_y - v2_x*v1_y;//1-2 edge
+  long dist2 = v2_x*v0_y - v0_x*v2_y;//2-0 edge
 
-  ///// PLACE YOUR CODE HERE
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
+  //Test if Origin is on Right Side of Shifted Edge
+  bool b0 = dist0 <= 0;
+  bool b1 = dist1 < 0;
+  bool b2 = dist2 <= 0; 
 
-  /////
-  ///// Sample Test Function Goes Here
-  /////
+  //Triangle Min Terms with no culling
+  //result = (b0 && b1 && b2) || (!b0 && !b1 && !b2)
 
-  
+  //Triangle Min Terms with backface culling;
+  result = b0 && b1 && b2;
+
   return (result-1); //Return 0 if hit, otherwise return -1
 }
 
 
 void rastBBox_40t8_hash( uchar* arr40 , ushort* val , int shift )
 {
-  uchar arr32[4];
-  uchar arr16[2];
-  uchar arr8;
+	uchar arr32[4];
+	uchar arr16[2];
+	uchar arr8;
 
-  ushort mask = 0x00ff ;
-  mask = mask >> shift ;
+	ushort mask = 0x00ff ;
+	mask = mask >> shift ;
 
-  arr32[0] = arr40[0] ^ arr40[1] ; 
-  arr32[1] = arr40[1] ^ arr40[2] ; 
-  arr32[2] = arr40[2] ^ arr40[3] ; 
-  arr32[3] = arr40[3] ^ arr40[4] ; 
+	arr32[0] = arr40[0] ^ arr40[1] ; 
+	arr32[1] = arr40[1] ^ arr40[2] ; 
+	arr32[2] = arr40[2] ^ arr40[3] ; 
+	arr32[3] = arr40[3] ^ arr40[4] ; 
 
   /*  printf( "C: %.2x %.2x %.2x %.2x\n",
       arr32[3], arr32[2] , arr32[1] , arr32[0] );*/
 
-  arr16[0] = arr32[0] ^ arr32[2] ;
-  arr16[1] = arr32[1] ^ arr32[3] ;
+	arr16[0] = arr32[0] ^ arr32[2] ;
+	arr16[1] = arr32[1] ^ arr32[3] ;
 
 
   // printf( "C: %.2x %.2x\n",
   //	  arr16[1], arr16[0] );
 
-  arr8 = arr16[0] ^ arr16[1] ;
+	arr8 = arr16[0] ^ arr16[1] ;
 
   //printf( "C: %.2x \n",
   //	  arr8 );
 
 
-  mask = arr8 & mask ;
-  val[0] = mask ;
+	mask = arr8 & mask ;
+	val[0] = mask ;
 }
 
 void rastBBox_jhash_jit_fix( 
-			      const long& s_x,
-			      const long& s_y,
-			      const long& ss_w_lg2,
-			      long* jitter_x,
-			      long* jitter_y)
+	const long& s_x,
+	const long& s_y,
+	const long& ss_w_lg2,
+	long* jitter_x,
+	long* jitter_y)
 {
 
-  long  x = s_x >> 4 ;
-  long  y = s_y >> 4 ; 
-  uchar arr40_1[5] ;
-  uchar arr40_2[5] ;
+	long  x = s_x >> 4 ;
+	long  y = s_y >> 4 ; 
+	uchar arr40_1[5] ;
+	uchar arr40_2[5] ;
 
-  long* arr40_1_ptr = (long*)arr40_1;
-  long* arr40_2_ptr = (long*)arr40_2;
+	long* arr40_1_ptr = (long*)arr40_1;
+	long* arr40_2_ptr = (long*)arr40_2;
 
-  ushort val_x[1] ; 
-  ushort val_y[1] ; 
+	ushort val_x[1] ; 
+	ushort val_y[1] ; 
 
-  *arr40_1_ptr = ( y << 20 ) | x ; 
-  *arr40_2_ptr = ( x << 20 ) | y ; 
+	*arr40_1_ptr = ( y << 20 ) | x ; 
+	*arr40_2_ptr = ( x << 20 ) | y ; 
 
-  rastBBox_40t8_hash( arr40_1 , val_x , ss_w_lg2 );
-  rastBBox_40t8_hash( arr40_2 , val_y , ss_w_lg2 );
+	rastBBox_40t8_hash( arr40_1 , val_x , ss_w_lg2 );
+	rastBBox_40t8_hash( arr40_2 , val_y , ss_w_lg2 );
 
-  *jitter_x = (long)( val_x[0] );
-  *jitter_y = (long)( val_y[0] );
+	*jitter_x = (long)( val_x[0] );
+	*jitter_y = (long)( val_y[0] );
 
 }
 
