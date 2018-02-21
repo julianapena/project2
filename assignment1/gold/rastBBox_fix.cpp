@@ -83,6 +83,10 @@ void rastBBox_uPoly_fix( u_Poly< long , ushort >& poly,
 
 }
 
+static inline long floor_ss(long val, long r_shift, int& ss_w_lg2) {
+  return ( val >> ( r_shift - ss_w_lg2 )) << ( r_shift - ss_w_lg2 ); 
+}
+
 void rastBBox_bbox_fix( u_Poly< long , ushort >& poly , 
 			       long& ll_x,
 			       long& ll_y,
@@ -151,18 +155,44 @@ void rastBBox_bbox_fix( u_Poly< long , ushort >& poly ,
   /   a quad or triangle can be determined by examing poly.vertices
   */
 
-  ur_x = 0 ;
-  ur_y = 0 ;
-  ll_x = 0 ;
-  ll_y = 0 ;
 
   /////
   ///// Bounding Box Function Goes Here
   ///// 
   
   ///// PLACE YOUR CODE HERE
+  long min_x = poly.v[0][0];
+  long max_x = poly.v[0][0];
+  long min_y = poly.v[0][1];
+  long max_y = poly.v[0][1];
+  for (int i = 1; i <  poly.vertices; i++) {
+    min_x = ( poly.v[i][0] < min_x) ? poly.v[i][0] : min_x;
+    max_x = ( poly.v[i][0] > max_x) ? poly.v[i][0] : max_x;
+    min_y = ( poly.v[i][1] < min_y) ? poly.v[i][1] : min_y;
+    max_x = ( poly.v[i][1] > axn_y) ? poly.v[i][1] : max_y;
+  }
+  ur_x = floor_ss(max_x, r_shift, ss_w_lg2);
+  ur_y = floor_ss(max_y, r_shift, ss_w_lg2);
+  ll_x = floor_ss(min_x, r_shift, ss_w_lg2);
+  ll_y = floor_ss(max_y, r_shift, ss_w_lg2);
 
+  valid = (ur_x < 0) 
+          && (ll_x > screen_w) 
+          && (ur_y < 0) 
+          && (ll_y > screen_h);
 
+  ur_x = (ur_x > screen_w) ? screen_w : ur_x;
+  ur_y = (ur_y > screen_h) ? screen_h : ur_y;
+  ll_x = (ll_x < 0) ? 0 : ll_x;
+  ur_y = (ll_y > 0) ? 0 : ll_y;
+
+  // //might need to always set the values even if invalid
+  // if (valid) {
+  //   ur_x = temp_ur_x;
+  //   ur_y = temp_ur_y;
+  //   ll_x = temp_ll_x;
+  //   ll_y = temp_ll_y;
+  // }
   
   
   
