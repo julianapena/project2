@@ -210,12 +210,12 @@ int rastBBox_stest_fix( u_Poly< long , ushort >& poly,
   //If this is a rectalge, then there is a fourth vertex. I wonder too about
   //the z dimension. There's only s_x and s_y, so the z dimension must not be 
   //importat.
-  long v0_x = poly->v[0].x[0] - s_x;
-  long v0_y = poly->v[0].x[1] - s_y;
-  long v1_x = poly->v[1].x[0] - s_x;
-  long v1_y = poly->v[1].x[1] - s_y;
-  long v2_x = poly->v[2].x[0] - s_x;
-  long v2_y = poly->v[2].x[1] - s_y;
+  long v0_x = poly.v[0].x[0] - s_x;
+  long v0_y = poly.v[0].x[1] - s_y;
+  long v1_x = poly.v[1].x[0] - s_x;
+  long v1_y = poly.v[1].x[1] - s_y;
+  long v2_x = poly.v[2].x[0] - s_x;
+  long v2_y = poly.v[2].x[1] - s_y;
 
   //Distance of origin shifted edge
   long dist0 = v0_x*v1_y - v1_x*v0_y;//0-1 edge
