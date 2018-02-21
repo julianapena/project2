@@ -160,15 +160,15 @@ void rastBBox_bbox_fix( u_Poly< long , ushort >& poly ,
   ///// 
 
   ///// PLACE YOUR CODE HERE
-  long min_x = poly.v[0][0];
-  long max_x = poly.v[0][0];
-  long min_y = poly.v[0][1];
-  long max_y = poly.v[0][1];
+  long min_x = poly.v[0].x[0];
+  long max_x = poly.v[0].x[0];
+  long min_y = poly.v[0].x[1];
+  long max_y = poly.v[0].x[1];
   for (int i = 1; i <  poly.vertices; i++) {
-    min_x = ( poly.v[i][0] < min_x) ? poly.v[i][0] : min_x;
-    max_x = ( poly.v[i][0] > max_x) ? poly.v[i][0] : max_x;
-    min_y = ( poly.v[i][1] < min_y) ? poly.v[i][1] : min_y;
-    max_x = ( poly.v[i][1] > axn_y) ? poly.v[i][1] : max_y;
+    min_x = ( poly.v[i].x[0] < min_x) ? poly.v[i].x[0] : min_x;
+    max_x = ( poly.v[i].x[0] > max_x) ? poly.v[i].x[0] : max_x;
+    min_y = ( poly.v[i].x[1] < min_y) ? poly.v[i].x[1] : min_y;
+    max_x = ( poly.v[i].x[1] > axn_y) ? poly.v[i].x[1] : max_y;
   }
   ur_x = floor_ss(max_x, r_shift, ss_w_lg2);
   ur_y = floor_ss(max_y, r_shift, ss_w_lg2);
@@ -236,28 +236,36 @@ int rastBBox_stest_fix( u_Poly< long , ushort >& poly,
   //If this is a rectalge, then there is a fourth vertex. I wonder too about
   //the z dimension. There's only s_x and s_y, so the z dimension must not be 
   //importat.
+  bool is_tri = poly.vertices == 3
   long v0_x = poly.v[0].x[0] - s_x;
   long v0_y = poly.v[0].x[1] - s_y;
   long v1_x = poly.v[1].x[0] - s_x;
   long v1_y = poly.v[1].x[1] - s_y;
   long v2_x = poly.v[2].x[0] - s_x;
   long v2_y = poly.v[2].x[1] - s_y;
+  //These have garbage if using a triangle
+  long v3_x = poly.v[3].x[0] - s_x;
+  long v3_y = poly.v[3].x[1] - s_y;
 
   //Distance of origin shifted edge
   long dist0 = v0_x*v1_y - v1_x*v0_y;//0-1 edge
   long dist1 = v1_x*v2_y - v2_x*v1_y;//1-2 edge
-  long dist2 = v2_x*v0_y - v0_x*v2_y;//2-0 edge
+  long dist2 = (is_tri) ? v2_x*v0_y - v0_x*v2_y : v2_x*v3_y - v3_x*v2_y;//2-0 edge or 2-3 edge
+  //garbage if triangle
+  long dist3 = v3_x*v0_y - v0_x*v3_y; //3-0 edge
 
   //Test if Origin is on Right Side of Shifted Edge
   bool b0 = dist0 <= 0;
   bool b1 = dist1 < 0;
-  bool b2 = dist2 <= 0; 
+  bool b2 = dist2 <= 0;
+  //garbage if triangle
+  bool b3 = dist3 <= 0;
 
   //Triangle Min Terms with no culling
   //result = (b0 && b1 && b2) || (!b0 && !b1 && !b2)
 
   //Triangle Min Terms with backface culling;
-  result = b0 && b1 && b2;
+  result = (is_tri) ? b0 && b1 && b2 : b0 && b1 && b2 && b3;
 
   return (result-1); //Return 0 if hit, otherwise return -1
 }
