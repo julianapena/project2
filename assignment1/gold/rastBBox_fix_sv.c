@@ -3,6 +3,10 @@
 #include <limits.h>
 #include <assert.h>
 
+static inline long floor_ss(long val, long r_shift, int ss_w_lg2) {
+  return ( val >> ( r_shift - ss_w_lg2 )) << ( r_shift - ss_w_lg2 ); 
+}
+
 //Given a uPoly and Bbox check that Bbox is good bound 
 // on uPoly
 int rastBBox_bbox_check( int   v0_x,     //uPoly
@@ -52,7 +56,35 @@ int rastBBox_bbox_check( int   v0_x,     //uPoly
   //Copy Past C++ Bounding Box Function ****BEGIN****
   //
   // note that bool,true, and false are not in c
+  long min_x = poly.v[0].x[0];
+  long max_x = poly.v[0].x[0];
+  long min_y = poly.v[0].x[1];
+  long max_y = poly.v[0].x[1];
+  int i;
+  for (i = 1; i < poly.q; i++) {
+    min_x = ( poly.v[i].x[0] < min_x) ? poly.v[i].x[0] : min_x;
+    max_x = ( poly.v[i].x[0] > max_x) ? poly.v[i].x[0] : max_x;
+    min_y = ( poly.v[i].x[1] < min_y) ? poly.v[i].x[1] : min_y;
+    max_y = ( poly.v[i].x[1] > max_y) ? poly.v[i].x[1] : max_y;
+  }
+  //ur_x = ( max_x >> ( r_shift - ss_w_lg2 )) << ( r_shift - ss_w_lg2 ); 
+  ur_x = floor_ss(max_x, r_shift, ss_w_lg2);
+  //ur_y = ( max_y >> ( r_shift - ss_w_lg2 )) << ( r_shift - ss_w_lg2 ); 
+  ur_y = floor_ss(max_y, r_shift, ss_w_lg2);
+  //ll_x = ( min_x >> ( r_shift - ss_w_lg2 )) << ( r_shift - ss_w_lg2 ); 
+  ll_x = floor_ss(min_x, r_shift, ss_w_lg2);
+  //ll_y = ( min_y >> ( r_shift - ss_w_lg2 )) << ( r_shift - ss_w_lg2 ); 
+  ll_y = floor_ss(min_y, r_shift, ss_w_lg2);
 
+  valid = !((ur_x < 0) 
+          || (ll_x > screen_w) 
+          || (ur_y < 0) 
+          || (ll_y > screen_h));
+
+  ur_x = (ur_x > screen_w) ? screen_w : ur_x;
+  ur_y = (ur_y > screen_h) ? screen_h : ur_y;
+  ll_x = (ll_x < 0) ? 0 : ll_x;
+  ll_y = (ll_y < 0) ? 0 : ll_y;
 
 			  
 
@@ -141,8 +173,38 @@ int rastBBox_stest_check( int   v0_x,      //uPoly
   //Copy Past C++ Sample Test Function ****BEGIN****
   //
   // note that bool,true, and false are not in c
+  int result = 0;
+  int is_tri = poly.q == 3;
+  long v0_x_center = poly.v[0].x[0] - s_x;
+  long v0_y_center = poly.v[0].x[1] - s_y;
+  long v1_x_center = poly.v[1].x[0] - s_x;
+  long v1_y_center = poly.v[1].x[1] - s_y;
+  long v2_x_center = poly.v[2].x[0] - s_x;
+  long v2_y_center = poly.v[2].x[1] - s_y;
+  //These have garbage if using a triangle
+  long v3_x_center = poly.v[3].x[0] - s_x;
+  long v3_y_center = poly.v[3].x[1] - s_y;
 
-  
+  //Distance of origin shifted edge
+  long dist0 = v0_x_center * v1_y_center - v1_x_center * v0_y_center;//0-1 edge
+  long dist1 = v1_x_center * v2_y_center - v2_x_center * v1_y_center;//1-2 edge
+  long dist2 = (is_tri) ? v2_x_center * v0_y_center - v0_x_center*v2_y_center : 
+                          v2_x_center * v3_y_center - v3_x_center * v2_y_center;//2-0 edge or 2-3 edge
+  //garbage if triangle
+  long dist3 = v3_x_center*v0_y_center - v0_x_center*v3_y_center; //3-0 edge
+
+  //Test if Origin is on Right Side of Shifted Edge
+  int b0 = dist0 <= 0;
+  int b1 = dist1 < 0;
+  int b2 = dist2 <= 0;
+  //garbage if triangle
+  int b3 = dist3 <= 0;
+
+  //Triangle Min Terms with no culling
+  //result = (b0 && b1 && b2) || (!b0 && !b1 && !b2)
+
+  //Triangle Min Terms with backface culling;
+  result = (is_tri) ? b0 && b1 && b2 : b0 && b1 && b2 && b3;
 
   //
   //Copy Past C++ Sample Test Function ****END****
@@ -194,7 +256,35 @@ int rastBBox_check( int   v0_x,      //uPoly
   //Copy Past C++ Bounding Box Function ****BEGIN****
   //
   // note that bool,true, and false are not in c
+  long min_x = poly.v[0].x[0];
+  long max_x = poly.v[0].x[0];
+  long min_y = poly.v[0].x[1];
+  long max_y = poly.v[0].x[1];
+  int i;
+  for (i = 1; i < poly.q; i++) {
+    min_x = ( poly.v[i].x[0] < min_x) ? poly.v[i].x[0] : min_x;
+    max_x = ( poly.v[i].x[0] > max_x) ? poly.v[i].x[0] : max_x;
+    min_y = ( poly.v[i].x[1] < min_y) ? poly.v[i].x[1] : min_y;
+    max_y = ( poly.v[i].x[1] > max_y) ? poly.v[i].x[1] : max_y;
+  }
+  //ur_x = ( max_x >> ( r_shift - ss_w_lg2 )) << ( r_shift - ss_w_lg2 ); 
+  ur_x = floor_ss(max_x, r_shift, ss_w_lg2);
+  //ur_y = ( max_y >> ( r_shift - ss_w_lg2 )) << ( r_shift - ss_w_lg2 ); 
+  ur_y = floor_ss(max_y, r_shift, ss_w_lg2);
+  //ll_x = ( min_x >> ( r_shift - ss_w_lg2 )) << ( r_shift - ss_w_lg2 ); 
+  ll_x = floor_ss(min_x, r_shift, ss_w_lg2);
+  //ll_y = ( min_y >> ( r_shift - ss_w_lg2 )) << ( r_shift - ss_w_lg2 ); 
+  ll_y = floor_ss(min_y, r_shift, ss_w_lg2);
 
+  valid = !((ur_x < 0) 
+          || (ll_x > screen_w) 
+          || (ur_y < 0) 
+          || (ll_y > screen_h));
+
+  ur_x = (ur_x > screen_w) ? screen_w : ur_x;
+  ur_y = (ur_y > screen_h) ? screen_h : ur_y;
+  ll_x = (ll_x < 0) ? 0 : ll_x;
+  ll_y = (ll_y < 0) ? 0 : ll_y;
 
   
   
@@ -225,16 +315,38 @@ int rastBBox_check( int   v0_x,      //uPoly
       //Copy Past C++ Sample Test Function ****BEGIN****
       //
       // note that bool,true, and false are not in c
-      
+      int result = 0;
+      int is_tri = poly.q == 3;
+      long v0_x_center = poly.v[0].x[0] - s_x;
+      long v0_y_center = poly.v[0].x[1] - s_y;
+      long v1_x_center = poly.v[1].x[0] - s_x;
+      long v1_y_center = poly.v[1].x[1] - s_y;
+      long v2_x_center = poly.v[2].x[0] - s_x;
+      long v2_y_center = poly.v[2].x[1] - s_y;
+      //These have garbage if using a triangle
+      long v3_x_center = poly.v[3].x[0] - s_x;
+      long v3_y_center = poly.v[3].x[1] - s_y;
 
-	  
-	  
-	  
-	  
-	  
-	  
-	  
-	  
+      //Distance of origin shifted edge
+      long dist0 = v0_x_center * v1_y_center - v1_x_center * v0_y_center;//0-1 edge
+      long dist1 = v1_x_center * v2_y_center - v2_x_center * v1_y_center;//1-2 edge
+      long dist2 = (is_tri) ? v2_x_center * v0_y_center - v0_x_center*v2_y_center : 
+                              v2_x_center * v3_y_center - v3_x_center * v2_y_center;//2-0 edge or 2-3 edge
+      //garbage if triangle
+      long dist3 = v3_x_center*v0_y_center - v0_x_center*v3_y_center; //3-0 edge
+
+      //Test if Origin is on Right Side of Shifted Edge
+      int b0 = dist0 <= 0;
+      int b1 = dist1 < 0;
+      int b2 = dist2 <= 0;
+      //garbage if triangle
+      int b3 = dist3 <= 0;
+
+      //Triangle Min Terms with no culling
+      //result = (b0 && b1 && b2) || (!b0 && !b1 && !b2)
+
+      //Triangle Min Terms with backface culling;
+      result = (is_tri) ? b0 && b1 && b2 : b0 && b1 && b2 && b3;
 	  
   
       //
