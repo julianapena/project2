@@ -2,6 +2,7 @@
 #include "rastBBox_fix.h"
 #include "assert.h"
 #include "limits.h"
+#include <stdio.h>
 
 
 
@@ -164,26 +165,30 @@ void rastBBox_bbox_fix( u_Poly< long , ushort >& poly ,
   long max_x = poly.v[0].x[0];
   long min_y = poly.v[0].x[1];
   long max_y = poly.v[0].x[1];
-  for (int i = 1; i <  poly.vertices; i++) {
+  for (int i = 1; i < poly.vertices; i++) {
     min_x = ( poly.v[i].x[0] < min_x) ? poly.v[i].x[0] : min_x;
     max_x = ( poly.v[i].x[0] > max_x) ? poly.v[i].x[0] : max_x;
     min_y = ( poly.v[i].x[1] < min_y) ? poly.v[i].x[1] : min_y;
-    max_x = ( poly.v[i].x[1] > axn_y) ? poly.v[i].x[1] : max_y;
+    max_y = ( poly.v[i].x[1] > max_y) ? poly.v[i].x[1] : max_y;
   }
+  //ur_x = ( max_x >> ( r_shift - ss_w_lg2 )) << ( r_shift - ss_w_lg2 ); 
   ur_x = floor_ss(max_x, r_shift, ss_w_lg2);
+  //ur_y = ( max_y >> ( r_shift - ss_w_lg2 )) << ( r_shift - ss_w_lg2 ); 
   ur_y = floor_ss(max_y, r_shift, ss_w_lg2);
+  //ll_x = ( min_x >> ( r_shift - ss_w_lg2 )) << ( r_shift - ss_w_lg2 ); 
   ll_x = floor_ss(min_x, r_shift, ss_w_lg2);
-  ll_y = floor_ss(max_y, r_shift, ss_w_lg2);
+  //ll_y = ( min_y >> ( r_shift - ss_w_lg2 )) << ( r_shift - ss_w_lg2 ); 
+  ll_y = floor_ss(min_y, r_shift, ss_w_lg2);
 
-  valid = (ur_x < 0) 
-          && (ll_x > screen_w) 
-          && (ur_y < 0) 
-          && (ll_y > screen_h);
+  valid = !((ur_x < 0) 
+          || (ll_x > screen_w) 
+          || (ur_y < 0) 
+          || (ll_y > screen_h));
 
   ur_x = (ur_x > screen_w) ? screen_w : ur_x;
   ur_y = (ur_y > screen_h) ? screen_h : ur_y;
   ll_x = (ll_x < 0) ? 0 : ll_x;
-  ur_y = (ll_y > 0) ? 0 : ll_y;
+  ll_y = (ll_y < 0) ? 0 : ll_y;
 
   // //might need to always set the values even if invalid
   // if (valid) {
@@ -236,7 +241,7 @@ int rastBBox_stest_fix( u_Poly< long , ushort >& poly,
   //If this is a rectalge, then there is a fourth vertex. I wonder too about
   //the z dimension. There's only s_x and s_y, so the z dimension must not be 
   //importat.
-  bool is_tri = poly.vertices == 3
+  bool is_tri = poly.vertices == 3;
   long v0_x = poly.v[0].x[0] - s_x;
   long v0_y = poly.v[0].x[1] - s_y;
   long v1_x = poly.v[1].x[0] - s_x;
